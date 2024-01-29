@@ -2,7 +2,6 @@ package com.boardgames.plugins
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import com.google.gson.JsonObject
 import com.typesafe.config.ConfigFactory
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -24,14 +23,6 @@ class Security {
     val audience = config.property("jwt.audience").getString()
     val realm = config.property("jwt.realm").getString()
 
-    // Define base credentials as a JsonObject with values from the
-    // configuration file.
-    val baseCredentials = JsonObject().apply {
-        val varName = "test_credentials"
-        addProperty("username", config.property("$varName.username").getString())
-        addProperty("email", config.property("$varName.email").getString())
-        addProperty("password", config.property("$varName.password").getString())
-    }
     data class BaseSession(val id: Int = 0)
 
     fun getToken(accountId: Int): String { // Generate a JWT token for a given account ID

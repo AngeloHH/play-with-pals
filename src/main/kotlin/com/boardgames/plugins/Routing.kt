@@ -1,7 +1,7 @@
 package com.boardgames.plugins
 
 import com.boardgames.routes.accountRoutes
-import com.boardgames.routes.ticTacToeRoutes
+import com.boardgames.routes.gameRoutes
 import com.typesafe.config.ConfigFactory
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -32,7 +32,7 @@ fun Application.configureRouting() {
     }
 
     // Configure routes for Tic Tac Toe game and account-related endpoints
-    ticTacToeRoutes(database)
+    gameRoutes(database)
     accountRoutes(database)
 
     // Serve static resources from the "assets" directory under "/static"

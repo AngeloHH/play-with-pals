@@ -30,7 +30,7 @@ fun Application.accountRoutes(database: Database) {
         post("/account") {
             val account = call.receive<ExposedUser>()
             val id = userService.create(account)
-            val data = mapOf("account-id" to id)
+            val data = mapOf("account" to mapOf("id" to id))
             call.respond(HttpStatusCode.Created, data)
         }
 
@@ -56,8 +56,8 @@ fun Application.accountRoutes(database: Database) {
             put("/account/change/password") {
                 val payload = call.principal<JWTPrincipal>()!!.payload
                 val id = payload.getClaim("account-id").asInt()
-                val password = call.receive<JsonObject>()["password"].asString
-                userService.update(id = id, username = null, password = password, email = null)
+                val password = call.receive<JsonObject>()["password"]
+                userService.update(id = id, username = null, password = password.asString, email = null)
                 call.respond(HttpStatusCode.OK)
             }
 

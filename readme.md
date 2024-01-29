@@ -11,7 +11,7 @@ This project is a board games API developed in Kotlin using Ktor and Exposed. Th
 - [x] Tic Tac Toe
 - [ ] Parchis
 - [ ] Bingo
-- [ ] Connect 4
+- [x] Connect 4
 
 ## Execution Instructions
 
@@ -30,12 +30,6 @@ This project is a board games API developed in Kotlin using Ktor and Exposed. Th
        issuer = "your_issuer"
        audience = "your_audience"
        realm = "boardgames.com"
-   }
-
-   test_credentials {
-       username = "SherlockHolmes221B"
-       email = "sherlock.holmes221b@bakerstreet.com"
-       password = "MoriartyShallNeverWin!"
    }
 
    database {

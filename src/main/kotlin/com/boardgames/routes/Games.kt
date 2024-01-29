@@ -36,7 +36,7 @@ fun ticTacToe(accountId: Int, params: JsonObject, game: ExposedGame): Pair<Expos
     val existingMove = game.players.any{ player ->
         player.moves?.any { it.first == move.x && it.second == move.y } ?: false
     }
-    if (existingMove || coords[0] > 8 || coords[1] > 8) throw IllegalArgumentException("Invalid movement.")
+    if (existingMove || coords[0] > 2 || coords[1] > 2) throw IllegalArgumentException("Invalid movement.")
 
     // Get the moves made by the current player
     val selfMoves = (game.players.find {
@@ -48,9 +48,31 @@ fun ticTacToe(accountId: Int, params: JsonObject, game: ExposedGame): Pair<Expos
     return Pair(move, findLine(selfMoves, 3))
 }
 
-val gameList = mapOf("tic-tac-toe" to ::ticTacToe)
+fun connect4(accountId: Int, params: JsonObject, game: ExposedGame): Pair<ExposedMoves, Boolean> {
+    val coords = params["coords"].asJsonArray.map { it.asInt }.toMutableList()
+    coords[1] = 0
+    game.players.forEach { player -> player.moves?.forEach {
+        if (it.first == coords[0] && coords[1] < it.second) coords[1] = it.second
+    } }
+    val move = ExposedMoves(
+        game = game.id,
+        player = accountId,
+        x = coords[0],
+        y = coords[1],
+    )
+    // Get the moves made by the current player
+    val selfMoves = (game.players.find {
+        it.id == accountId
+    }?.moves?.map { Pair(it.first, it.second) } ?: listOf()).toMutableList()
+    // Add the new move to the player's moves
+    selfMoves.add(Pair(coords[0], coords[1]))
+    if (coords[0] < 7 && coords[1] < 6) return Pair(move, findLine(selfMoves, 4))
+    throw IllegalArgumentException("Invalid movement.")
+}
 
-fun Application.ticTacToeRoutes(database: Database) {
+val gameList = mapOf("tic-tac-toe" to ::ticTacToe, "connect4" to ::connect4)
+
+fun Application.gameRoutes(database: Database) {
     val gameService = GameService(database)
     val connections = mutableMapOf<Int, WebSocketSession>()
     val movementsQueue = LinkedBlockingQueue<Pair<Int, JsonObject>>()
@@ -71,6 +93,15 @@ fun Application.ticTacToeRoutes(database: Database) {
     }
 
     routing {
+
+        get("/games/{id}") {
+            val gameId = call.parameters["id"]?.toInt()
+            val game = gameId?.let { gameService.read(it) }
+            if (game != null) return@get call.respond(game)
+            val error = mapOf("error" to "Game not found.")
+            call.respond(HttpStatusCode.NotFound, error)
+        }
+
         authenticate("auth-jwt") {
             post("/games/{game}") {
                 // Check the game type
@@ -144,14 +175,6 @@ fun Application.ticTacToeRoutes(database: Database) {
                         }
                     }
                 } else throw IllegalArgumentException("Invalid game name.")
-            }
-
-            get("/games/{id}") {
-                val gameId = call.parameters["id"]?.toInt()
-                val game = gameId?.let { gameService.read(it) }
-                if (game != null) return@get call.respond(game)
-                val error = mapOf("error" to "Game not found.")
-                call.respond(HttpStatusCode.NotFound, error)
             }
 
             webSocket("/ws") {
